@@ -1,12 +1,39 @@
 using ModularAgenda.Core.Abstractions;
+using ModularAgenda.Core.Exceptions;
 
 namespace ModularAgenda.Core.Domain;
 
 public class Note : AgendaItem, ICalendarItem
 {
-    // TODO(Kadir):
-    public DateOnly? CalendarDate => throw new NotImplementedException("Kadir dolduracak");
+    private const int SummaryMaxLength = 30;
 
-    // TODO(Kadir):
-    public override string Summary => throw new NotImplementedException("Kadir dolduracak");
+    public DateOnly Date { get; private set; }
+    public string Text { get; private set; }
+
+    public Note(DateOnly date, string text)
+    {
+        EnsureNotEmpty(text);
+        Date = date;
+        Text = text;
+    }
+
+    public DateOnly? CalendarDate => Date;
+
+    public override string Summary =>
+        Text.Length <= SummaryMaxLength
+            ? Text
+            : Text[..SummaryMaxLength] + "…";
+
+    public void UpdateText(string text)
+    {
+        EnsureNotEmpty(text);
+        Text = text;
+        MarkUpdated();
+    }
+
+    private static void EnsureNotEmpty(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            throw new EmptyNoteTextException();
+    }
 }
