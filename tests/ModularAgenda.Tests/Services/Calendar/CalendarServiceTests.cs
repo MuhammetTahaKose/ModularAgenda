@@ -1,3 +1,5 @@
+using ModularAgenda.Core.Abstractions;
+using ModularAgenda.Core.Domain;
 using ModularAgenda.Core.Services.Calendar;
 using ModularAgenda.Tests.Fakes;
 
@@ -68,35 +70,46 @@ public class CalendarServiceTests
     public async Task GetMonthGridAsync_PutsEventsTodosAndNotesTogetherOnTheirDay()
     {
         // Arrange: aynı güne üç farklı tür
-        await _events.AddAsync(new TestEvent("14:00 Toplantı", Nov(24)));
-        await _todos.AddAsync(new TestTodo("Ara rapor", dueDate: Nov(24)));
-        await _notes.AddAsync(new TestNote("Annemi ara", Nov(24)));
+        var meeting = new TestEvent("14:00 Toplantı", Nov(24));
+        var todo = new TestTodo("Ara rapor", dueDate: Nov(24));
+        var note = new Note(Nov(24), "Annemi ara");
+        await _events.AddAsync(meeting);
+        await _todos.AddAsync(todo);
+        await _notes.AddAsync(note);
         await _todos.AddAsync(new TestTodo("Başka gün", dueDate: Nov(27)));
 
         // Act
         var grid = await _calendar.GetMonthGridAsync(2026, 11, Today);
 
-        // Assert: kutu türleri bilmeden hepsinin Summary'sini çizebilir
-        Assert.Equal(
-            new[] { "14:00 Toplantı", "Ara rapor", "Annemi ara" },
-            Cell(grid, Nov(24)).Items.Select(i => i.Summary));
+        // Assert: üç farklı sınıf aynı kutunun listesinde, ICalendarItem olarak yan yana
+        Assert.Equal(new ICalendarItem[] { meeting, todo, note }, Cell(grid, Nov(24)).Items);
         Assert.Single(Cell(grid, Nov(27)).Items);
         Assert.False(Cell(grid, Nov(25)).HasItems);
     }
 
-    [Fact]
-    public async Task GetMonthGridAsync_FillsPaddingDaysToo_IncludingTheLastCell()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GetMonthGridAsync_FillsFirstAndLastCell_WhetherRepositoriesIncludeRangeEndsOrNot(bool excludesEnds)
     {
-        // Arrange: ızgaranın ilk ve son kutusu (aralığın iki ucu da dahil olmalı)
-        await _events.AddAsync(new TestEvent("Ekim sonu", new DateOnly(2026, 10, 26)));
-        await _events.AddAsync(new TestEvent("Aralık başı", new DateOnly(2026, 12, 6)));
+        // Arrange: ızgaranın ilk ve son kutusu; depolar aralığın uçlarını dahil etse de etmese de dolmalı
+        var events = new FakeCalendarEventRepository { ExcludesRangeEnds = excludesEnds };
+        var todos = new FakeTodoRepository { ExcludesRangeEnds = excludesEnds };
+        var notes = new FakeNoteRepository { ExcludesRangeEnds = excludesEnds };
+        var calendar = new CalendarService(events, todos, notes);
+        var firstCellEvent = new TestEvent("Ekim sonu", new DateOnly(2026, 10, 26));
+        var lastCellTodo = new TestTodo("Aralık başı", dueDate: new DateOnly(2026, 12, 6));
+        var lastCellNote = new Note(new DateOnly(2026, 12, 6), "Aralık notu");
+        await events.AddAsync(firstCellEvent);
+        await todos.AddAsync(lastCellTodo);
+        await notes.AddAsync(lastCellNote);
 
         // Act
-        var grid = await _calendar.GetMonthGridAsync(2026, 11, Today);
+        var grid = await calendar.GetMonthGridAsync(2026, 11, Today);
 
         // Assert
-        Assert.Single(grid[0].Items);
-        Assert.Single(grid[^1].Items);
+        Assert.Same(firstCellEvent, Assert.Single(grid[0].Items));
+        Assert.Equal(new ICalendarItem[] { lastCellTodo, lastCellNote }, grid[^1].Items);
     }
 
     [Fact]
@@ -109,18 +122,26 @@ public class CalendarServiceTests
         Assert.DoesNotContain(grid, c => c.HasItems);
     }
 
-    [Fact]
-    public async Task GetDayAsync_ReturnsOnlyThatDaysItems()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GetDayAsync_ReturnsOnlyThatDaysItems_WhetherRepositoriesIncludeRangeEndsOrNot(bool excludesEnds)
     {
         // Arrange
-        await _events.AddAsync(new TestEvent("14:00 Toplantı", Nov(24)));
-        await _notes.AddAsync(new TestNote("Annemi ara", Nov(24)));
-        await _events.AddAsync(new TestEvent("Ertesi gün", Nov(25)));
+        var events = new FakeCalendarEventRepository { ExcludesRangeEnds = excludesEnds };
+        var notes = new FakeNoteRepository { ExcludesRangeEnds = excludesEnds };
+        var calendar = new CalendarService(events, new FakeTodoRepository(), notes);
+        var meeting = new TestEvent("14:00 Toplantı", Nov(24));
+        var note = new Note(Nov(24), "Annemi ara");
+        await events.AddAsync(new TestEvent("Önceki gün", Nov(23)));
+        await events.AddAsync(meeting);
+        await notes.AddAsync(note);
+        await events.AddAsync(new TestEvent("Ertesi gün", Nov(25)));
 
         // Act
-        var items = await _calendar.GetDayAsync(Nov(24));
+        var items = await calendar.GetDayAsync(Nov(24));
 
         // Assert
-        Assert.Equal(new[] { "14:00 Toplantı", "Annemi ara" }, items.Select(i => i.Summary));
+        Assert.Equal(new ICalendarItem[] { meeting, note }, items);
     }
 }

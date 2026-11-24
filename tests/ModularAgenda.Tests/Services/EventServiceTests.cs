@@ -1,3 +1,4 @@
+using ModularAgenda.Core.Domain;
 using ModularAgenda.Core.Services;
 using ModularAgenda.Tests.Fakes;
 
@@ -37,7 +38,7 @@ public class EventServiceTests
         // Arrange
         var meeting = new TestEvent("14:00 Toplantı", new DateOnly(2026, 11, 24));
         await _service.AddAsync(meeting);
-        var note = new TestNote("Sunumu getir");
+        var note = new Note(new DateOnly(2026, 11, 24), "Sunumu getir");
         await _notes.AddLinkedAsync(note, meeting);
         var reminder = TestReminder.Once(meeting, "24 Kasım 13:30", new DateTime(2026, 11, 24, 10, 30, 0, DateTimeKind.Utc));
         await _reminders.AddAsync(reminder);

@@ -55,8 +55,8 @@ public class TodoServiceTests
         var otherTodo = new TestTodo("Başka görev");
         await _service.AddAsync(todo);
         await _service.AddAsync(otherTodo);
-        var linkedNote = new TestNote("Kaynakları ekle");
-        var otherNote = new TestNote("Bu kalmalı");
+        var linkedNote = new Note(new DateOnly(2026, 11, 27), "Kaynakları ekle");
+        var otherNote = new Note(new DateOnly(2026, 11, 27), "Bu kalmalı");
         await _notes.AddLinkedAsync(linkedNote, todo);
         await _notes.AddLinkedAsync(otherNote, otherTodo);
         var reminder = TestReminder.Once(todo, "27 Kasım 09:00", new DateTime(2026, 11, 27, 6, 0, 0, DateTimeKind.Utc));

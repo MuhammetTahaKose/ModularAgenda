@@ -60,24 +60,29 @@ public class CalendarService
     }
 
     /// <summary>Gün kutusuna tıklanınca açılan liste: o güne düşen her şey.</summary>
-    public async Task<IReadOnlyList<ICalendarItem>> GetDayAsync(DateOnly date)
-    {
-        IReadOnlyList<ICalendarItem> items = await GetItemsBetweenAsync(date, date);
-        return items.Where(item => item.CalendarDate == date).ToList();
-    }
+    public async Task<IReadOnlyList<ICalendarItem>> GetDayAsync(DateOnly date) =>
+        await GetItemsBetweenAsync(date, date);
 
     /// <summary>
     /// Üç sorgunun sonuçlarını tek listede birleştirir: etkinlikler, görevler, notlar.
     /// Liste ICalendarItem türünde olduğu için üç farklı sınıf yan yana durabilir.
-    /// Aralığın iki ucu da dahildir.
+    /// first ve last günleri de dahildir. Depo sözleşmeleri aralığın uçlarının dahil olup
+    /// olmadığını söylemediği için depolardan iki yana birer gün fazlası istenir, fazlası
+    /// burada atılır (NoteService'teki yöntemin aynısı).
     /// </summary>
-    private async Task<IReadOnlyList<ICalendarItem>> GetItemsBetweenAsync(DateOnly start, DateOnly end)
+    private async Task<IReadOnlyList<ICalendarItem>> GetItemsBetweenAsync(DateOnly first, DateOnly last)
     {
+        DateOnly from = first.AddDays(-1);
+        DateOnly to = last.AddDays(1);
+
         var items = new List<ICalendarItem>();
-        items.AddRange(await _events.GetByDateRangeAsync(start, end));
-        items.AddRange(await _todos.GetByDueDateRangeAsync(start, end));
-        items.AddRange(await _notes.GetByDateRangeAsync(start, end));
-        return items;
+        items.AddRange(await _events.GetByDateRangeAsync(from, to));
+        items.AddRange(await _todos.GetByDueDateRangeAsync(from, to));
+        items.AddRange(await _notes.GetByDateRangeAsync(from, to));
+
+        return items
+            .Where(item => item.CalendarDate >= first && item.CalendarDate <= last)
+            .ToList();
     }
 
     /// <summary>Pazartesi = 0, Salı = 1, ..., Pazar = 6. (.NET'te pazar 0 ile başlar.)</summary>

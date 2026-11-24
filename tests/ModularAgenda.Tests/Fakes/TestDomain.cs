@@ -4,11 +4,12 @@ using ModularAgenda.Core.Domain;
 namespace ModularAgenda.Tests.Fakes;
 
 // =============================================================================
-// GEÇİCİ: Domain sınıflarının Summary ve CalendarDate üyeleri şu an
-// NotImplementedException fırlatıyor (Kadir dolduracak). Servis testleri onu
-// beklemesin diye bu alt sınıflar Summary'yi ezer ve ICalendarItem.CalendarDate'i
-// yeniden uygular. Gerçek sınıflar dolunca bu dosya silinir; testler gerçek
-// constructor'larla nesne oluşturur.
+// GEÇİCİ: TodoItem, CalendarEvent, Habit ve Reminder'ın alt sınıfları hâlâ stub;
+// Summary ve CalendarDate üyeleri NotImplementedException fırlatıyor (Kadir
+// dolduracak). Servis testleri onu beklemesin diye bu alt sınıflar Summary'yi ezer
+// ve ICalendarItem.CalendarDate'i yeniden uygular. Note artık gerçek sınıf; testler
+// onu doğrudan new Note(tarih, metin) ile oluşturur. Diğerleri de dolunca bu dosya
+// silinir.
 // =============================================================================
 
 internal sealed class TestTodo : TodoItem, ICalendarItem
@@ -39,22 +40,6 @@ internal sealed class TestEvent : CalendarEvent, ICalendarItem
 
     public override string Summary => _summary;
     DateOnly? ICalendarItem.CalendarDate => _startDate;
-}
-
-internal sealed class TestNote : Note, ICalendarItem
-{
-    private readonly string _summary;
-    private readonly DateOnly? _day;
-
-    /// <param name="day">Güne bağlı notsa o gün; göreve ya da etkinliğe bağlıysa null.</param>
-    public TestNote(string summary, DateOnly? day = null)
-    {
-        _summary = summary;
-        _day = day;
-    }
-
-    public override string Summary => _summary;
-    DateOnly? ICalendarItem.CalendarDate => _day;
 }
 
 internal sealed class TestHabit : Habit
