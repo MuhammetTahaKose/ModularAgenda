@@ -1,9 +1,11 @@
-using System;
+﻿using System.IO;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ModularAgenda.Core.Domain;
 using ModularAgenda.Core.Repositories;
 using ModularAgenda.Core.Services;
+using ModularAgenda.Core.Services.Calendar;
 using ModularAgenda.Data;
 using ModularAgenda.Data.Repositories;
 
@@ -11,52 +13,56 @@ namespace ModularAgenda.App;
 
 public partial class App : Application
 {
-    private readonly ServiceProvider serviceProvider;
-    private IServiceScope? windowScope;
-
-    public IServiceProvider ServiceProvider => serviceProvider;
+    public IServiceProvider ServiceProvider { get; private set; }
 
     public App()
     {
-        var services = new ServiceCollection();
-        ConfigureServices(services);
-        serviceProvider = services.BuildServiceProvider();
+        var serviceCollection = new ServiceCollection();
+        ConfigureServices(serviceCollection);
+        ServiceProvider = serviceCollection.BuildServiceProvider();
+    }
 
-        using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        context.Database.EnsureCreated();
+    private static void ConfigureServices(IServiceCollection services)
+    {
+        string dataFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "ModularAgenda");
+        Directory.CreateDirectory(dataFolder); // klasör zaten varsa bir şey yapmaz
+        string databasePath = Path.Combine(dataFolder, "agenda.db");
+
+        // Uygulama tek kullanıcılı ve tek pencereli; bu yüzden context, repository'ler ve servisler Singleton.
+        services.AddDbContext<AppDbContext>(
+            options => options.UseSqlite($"Data Source={databasePath}"),
+            ServiceLifetime.Singleton);
+
+        // Repository'ler
+        services.AddSingleton<INoteRepository, EfNoteRepository>();
+        services.AddSingleton<ITodoRepository, EfTodoRepository>();
+        services.AddSingleton<ICalendarEventRepository, EfCalendarEventRepository>();
+        services.AddSingleton<IReminderRepository, EfReminderRepository>();
+        services.AddSingleton<IRepository<Habit>, EfRepository<Habit>>();
+
+        // Servisler
+        services.AddSingleton<LinkedItemsCleaner>();
+        services.AddSingleton<NoteService>();
+        services.AddSingleton<CalendarService>();
+        services.AddSingleton<TodoService>();
+        services.AddSingleton<EventService>();
+        services.AddSingleton<HabitService>();
+
+        // UI ekibi: ViewModel'leri buraya kaydedin
+        services.AddSingleton<MonthViewModel>();
+        services.AddSingleton<MainWindow>();
     }
 
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
 
-        windowScope = serviceProvider.CreateScope();
-        var repository = windowScope.ServiceProvider.GetRequiredService<INoteRepository>();
-        var noteService = new NoteService(repository);
-        var viewModel = new MonthViewModel(noteService);
-        var window = new MainWindow(viewModel);
+        var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
+        mainWindow.Show();
 
-        MainWindow = window;
-        window.Show();
-        await viewModel.InitializeAsync();
-    }
-
-    protected override void OnExit(ExitEventArgs e)
-    {
-        windowScope?.Dispose();
-        serviceProvider.Dispose();
-        base.OnExit(e);
-    }
-
-    private static void ConfigureServices(IServiceCollection services)
-    {
-        services.AddDbContext<AppDbContext>(
-            options => options.UseSqlite("Data Source=agenda.db"));
-
-        services.AddScoped<INoteRepository, EfNoteRepository>();
-        services.AddScoped<ITodoRepository, EfTodoRepository>();
-        services.AddScoped<ICalendarEventRepository, EfCalendarEventRepository>();
-        services.AddScoped<IReminderRepository, EfReminderRepository>();
+        await ServiceProvider.GetRequiredService<MonthViewModel>().InitializeAsync();
     }
 }
