@@ -4,6 +4,8 @@ namespace ModularAgenda.Core.Domain;
 
 public class Habit : AgendaItem, IRemindable
 {
-    // TODO(Kadir):
-    public override string Summary => throw new NotImplementedException("Kadir dolduracak");
+    public string Name { get; set; } = string.Empty;
+
+    public override string Summary => Name;
 }
+
