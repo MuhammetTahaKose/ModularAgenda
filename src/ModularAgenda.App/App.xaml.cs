@@ -51,17 +51,18 @@ public partial class App : Application
         services.AddSingleton<HabitService>();
 
         // UI ekibi: ViewModel'leri buraya kaydedin
-
+        services.AddSingleton<MonthViewModel>();
         services.AddSingleton<MainWindow>();
     }
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-
         ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
 
         var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
         mainWindow.Show();
+
+        await ServiceProvider.GetRequiredService<MonthViewModel>().InitializeAsync();
     }
 }
