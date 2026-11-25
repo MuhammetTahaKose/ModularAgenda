@@ -21,7 +21,8 @@ public class EfRepository<T> : IRepository<T> where T : AgendaItem
 
     public async Task<T?> GetByIdAsync(Guid id)
     {
-        return await _context.Set<T>().FindAsync(id);
+        // FindAsync context'te takip edilen silinmiş kaydı da döndürür; sorgu ise silinmiş kayıt filtresini her zaman uygular.
+        return await _context.Set<T>().FirstOrDefaultAsync(e => e.Id == id);
     }
 
     public async Task<IReadOnlyList<T>> GetAllAsync()
@@ -34,16 +35,5 @@ public class EfRepository<T> : IRepository<T> where T : AgendaItem
         // Update updated_at logic here if AgendaItem supports it
         _context.Set<T>().Update(item);
         await _context.SaveChangesAsync();
-    }
-
-    public async Task DeleteAsync(Guid id)
-    {
-        var item = await _context.Set<T>().IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id);
-        if (item != null)
-        {
-            item.Delete();
-            _context.Set<T>().Update(item);
-            await _context.SaveChangesAsync();
-        }
     }
 }

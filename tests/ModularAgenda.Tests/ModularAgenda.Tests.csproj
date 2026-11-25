@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ModularAgenda.Core\ModularAgenda.Core.csproj" />
+    <ProjectReference Include="..\..\src\ModularAgenda.Data\ModularAgenda.Data.csproj" />
   </ItemGroup>
 
 </Project>

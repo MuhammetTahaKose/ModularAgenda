@@ -9,5 +9,8 @@ public abstract class Reminder : AgendaItem
         TargetId = targetId;
     }
 
+    // EF Core için
+    protected Reminder() { }
+
     public abstract DateTime? GetNextTriggerTime(DateTime nowUtc);   // bir daha çalmayacaksa null
 }

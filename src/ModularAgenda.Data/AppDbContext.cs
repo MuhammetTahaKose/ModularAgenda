@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<TodoItem> TodoItems => Set<TodoItem>();
     public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
     public DbSet<Habit> Habits => Set<Habit>();
+    public DbSet<Reminder> Reminders => Set<Reminder>();
     public DbSet<OneTimeReminder> OneTimeReminders => Set<OneTimeReminder>();
     public DbSet<DailyReminder> DailyReminders => Set<DailyReminder>();
 
@@ -33,8 +34,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<TodoItem>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<CalendarEvent>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Habit>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<OneTimeReminder>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<DailyReminder>().HasQueryFilter(e => !e.IsDeleted);
+        // OneTimeReminder ve DailyReminder aynı tabloda (TPH); EF Core filtreyi sadece kök tipe kabul eder.
+        modelBuilder.Entity<Reminder>().HasQueryFilter(e => !e.IsDeleted);
     }
 }
 

@@ -10,11 +10,10 @@ public class EfNoteRepository : EfRepository<Note>, INoteRepository
     {
     }
 
-    public async Task<IReadOnlyList<Note>> GetByTargetAsync(Guid targetId)
+    // TODO: Note'a TargetId eklenince doldurulacak
+    public Task<IReadOnlyList<Note>> GetByTargetAsync(Guid targetId)
     {
-        return await _context.Notes
-            .Where(n => n.TargetId == targetId)
-            .ToListAsync();
+        return Task.FromResult<IReadOnlyList<Note>>(Array.Empty<Note>());
     }
 
     public async Task<IReadOnlyList<Note>> GetByDateRangeAsync(DateOnly start, DateOnly end)
