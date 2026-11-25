@@ -5,16 +5,6 @@ namespace ModularAgenda.Core.Domain;
 
 public class Note : AgendaItem, ICalendarItem
 {
-<<<<<<< HEAD
-    public string Title { get; set; } = string.Empty;
-    public string Content { get; set; } = string.Empty;
-    public Guid? TargetId { get; set; }
-    public DateOnly? Date { get; set; }
-
-    public DateOnly? CalendarDate => Date;
-
-    public override string Summary => Title;
-=======
     private const int SummaryMaxLength = 30;
 
     public DateOnly Date { get; private set; }
@@ -46,6 +36,5 @@ public class Note : AgendaItem, ICalendarItem
         if (string.IsNullOrWhiteSpace(text))
             throw new EmptyNoteTextException();
     }
->>>>>>> origin/main
 }
 
