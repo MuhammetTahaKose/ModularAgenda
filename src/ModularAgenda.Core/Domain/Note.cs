@@ -4,9 +4,13 @@ namespace ModularAgenda.Core.Domain;
 
 public class Note : AgendaItem, ICalendarItem
 {
-    // TODO(Kadir):
-    public DateOnly? CalendarDate => throw new NotImplementedException("Kadir dolduracak");
+    public string Title { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public Guid? TargetId { get; set; }
+    public DateOnly? Date { get; set; }
 
-    // TODO(Kadir):
-    public override string Summary => throw new NotImplementedException("Kadir dolduracak");
+    public DateOnly? CalendarDate => Date;
+
+    public override string Summary => Title;
 }
+

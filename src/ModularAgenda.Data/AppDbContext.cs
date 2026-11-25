@@ -5,6 +5,8 @@ namespace ModularAgenda.Data;
 
 public class AppDbContext : DbContext
 {
+    public AppDbContext() { }
+
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Note> Notes => Set<Note>();
@@ -13,6 +15,14 @@ public class AppDbContext : DbContext
     public DbSet<Habit> Habits => Set<Habit>();
     public DbSet<OneTimeReminder> OneTimeReminders => Set<OneTimeReminder>();
     public DbSet<DailyReminder> DailyReminders => Set<DailyReminder>();
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlite("Data Source=agenda.db");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,3 +37,4 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<DailyReminder>().HasQueryFilter(e => !e.IsDeleted);
     }
 }
+

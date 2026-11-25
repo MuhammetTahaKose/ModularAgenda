@@ -1,6 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using ModularAgenda.Core.Domain;
 using ModularAgenda.Core.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 namespace ModularAgenda.Data.Repositories;
 
@@ -31,6 +31,13 @@ public class EfRepository<T> : IRepository<T> where T : AgendaItem
 
     public async Task UpdateAsync(T item)
     {
+        _context.Set<T>().Update(item);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(T item)
+    {
+        item.Delete(); // Sets IsDeleted = true
         _context.Set<T>().Update(item);
         await _context.SaveChangesAsync();
     }
