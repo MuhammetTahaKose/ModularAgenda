@@ -31,14 +31,19 @@ public class EfRepository<T> : IRepository<T> where T : AgendaItem
 
     public async Task UpdateAsync(T item)
     {
+        // Update updated_at logic here if AgendaItem supports it
         _context.Set<T>().Update(item);
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(T item)
+    public async Task DeleteAsync(Guid id)
     {
-        item.Delete(); // Sets IsDeleted = true
-        _context.Set<T>().Update(item);
-        await _context.SaveChangesAsync();
+        var item = await _context.Set<T>().IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id);
+        if (item != null)
+        {
+            item.Delete();
+            _context.Set<T>().Update(item);
+            await _context.SaveChangesAsync();
+        }
     }
 }
