@@ -8,6 +8,9 @@ public class DailyReminder : Reminder
         throw new NotImplementedException("Kadir dolduracak");
     }
 
+    // EF Core için
+    private DailyReminder() { }
+
     // TODO(Kadir):
     public override string Summary => throw new NotImplementedException("Kadir dolduracak");
 

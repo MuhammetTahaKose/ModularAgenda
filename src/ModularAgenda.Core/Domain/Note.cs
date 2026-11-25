@@ -17,6 +17,9 @@ public class Note : AgendaItem, ICalendarItem
         Text = text;
     }
 
+    // EF Core için
+    private Note() { Text = string.Empty; }
+
     public DateOnly? CalendarDate => Date;
 
     public override string Summary =>
