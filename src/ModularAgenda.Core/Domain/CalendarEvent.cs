@@ -4,9 +4,12 @@ namespace ModularAgenda.Core.Domain;
 
 public class CalendarEvent : AgendaItem, ICalendarItem, INoteable, IRemindable
 {
-    // TODO(Kadir):
-    public DateOnly? CalendarDate => throw new NotImplementedException("Kadir dolduracak");
+    public string Title { get; set; } = string.Empty;
+    public DateOnly StartDate { get; set; }
+    public DateOnly EndDate { get; set; }
 
-    // TODO(Kadir):
-    public override string Summary => throw new NotImplementedException("Kadir dolduracak");
+    public DateOnly? CalendarDate => StartDate;
+
+    public override string Summary => Title;
 }
+
